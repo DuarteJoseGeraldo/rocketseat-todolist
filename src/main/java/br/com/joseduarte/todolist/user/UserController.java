@@ -1,5 +1,6 @@
 package br.com.joseduarte.todolist.user;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,9 @@ public class UserController {
     public ResponseEntity<?> create(@RequestBody UserModel user) {
         if (!Objects.isNull(this.userRepository.findByUsername(user.getUsername())))
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User already registered");
+
+        String password = BCrypt.withDefaults().hashToString(12, user.getPassword().toCharArray());
+        user.setPassword(password);
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userRepository.save(user));
     }
 
