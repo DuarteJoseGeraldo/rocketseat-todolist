@@ -23,19 +23,28 @@ public class FilterTaskAuth extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var authEconded = request.getHeader("Authorization").substring("Basic".length()).trim();
 
-        String authDecoded = new String(Base64.getDecoder().decode(authEconded));
+        if (request.getServletPath().startsWith("/tasks/")) {
+            var authEconded = request.getHeader("Authorization").substring("Basic".length()).trim();
 
-        String[] credentials = authDecoded.split(":");
+            String authDecoded = new String(Base64.getDecoder().decode(authEconded));
 
-        UserModel user = this.userRepository.findByUsername(credentials[0]);
+            String[] credentials = authDecoded.split(":");
 
-        if (Objects.isNull(user)) response.sendError(401);
-        else{
-            if(BCrypt.verifyer().verify(credentials[1].toCharArray(), user.getPassword()).verified) filterChain.doFilter(request, response);
-            else response.sendError(401);
+            UserModel user = this.userRepository.findByUsername(credentials[0]);
+
+            if (Objects.isNull(user)) response.sendError(401);
+            else {
+                if (BCrypt.verifyer().verify(credentials[1].toCharArray(), user.getPassword()).verified){
+                    request.setAttribute("idUser", user.getId());
+                    filterChain.doFilter(request, response);
+                }
+                else response.sendError(401);
+            }
+        } else {
+            filterChain.doFilter(request, response);
         }
+
 
     }
 }
