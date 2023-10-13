@@ -50,6 +50,10 @@ public class TaskController {
 
         if (Objects.isNull(task)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("task not found");
 
+        if(!task.getIdUser().equals(request.getAttribute("idUser"))){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Task nao pertence ao usuario");
+        }
+
         Utils.copyNonNullProperties(taskModel, task);
 
         TaskModel updatedTask = this.taskRepository.save(task);
